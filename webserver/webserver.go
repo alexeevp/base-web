@@ -18,11 +18,10 @@ func Run() {
 
 	e = echo.New()
 	e.GET("/", action.Index)
+	e.GET("/second", action.Second)
 	e.Static("/static", "static")
 	e.HideBanner = true
-	e.Renderer = &TemplateRenderer{
-		templates: template.Must(template.ParseGlob("webserver/templates/*.html")),
-	}
+	e.Renderer = &TemplateRenderer{}
 	go func() {
 		err := e.Start(":1323")
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -49,10 +48,12 @@ type TemplateRenderer struct {
 // Render renders a template document
 func (t *TemplateRenderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 
+	t.templates = template.Must(template.ParseFiles("webserver/templates/"+name, "webserver/templates/layout.html"))
+
 	// Add global methods if data is a map
 	if viewContext, isMap := data.(map[string]interface{}); isMap {
 		viewContext["reverse"] = c.Echo().Reverse
 	}
 
-	return t.templates.ExecuteTemplate(w, name, data)
+	return t.templates.ExecuteTemplate(w, "layout.html", data)
 }
