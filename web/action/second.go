@@ -7,6 +7,6 @@ import (
 
 func Second(c echo.Context) error {
 	return c.Render(http.StatusOK, "second/second.html", map[string]interface{}{
-		"name": "Second!",
+		"name": "Inner page",
 	})
 }
