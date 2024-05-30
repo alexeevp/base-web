@@ -1,7 +1,7 @@
-package webserver
+package web
 
 import (
-	"bms/webserver/action"
+	"bms/web/action"
 	"context"
 	"errors"
 	"github.com/labstack/echo/v4"
@@ -19,7 +19,7 @@ func Run() {
 	e = echo.New()
 	e.GET("/", action.Index)
 	e.GET("/second", action.Second)
-	e.Static("/static", "static")
+	e.Static("/static", "web/static")
 	e.HideBanner = true
 	e.Renderer = &TemplateRenderer{}
 	go func() {
@@ -48,7 +48,7 @@ type TemplateRenderer struct {
 // Render renders a template document
 func (t *TemplateRenderer) Render(w io.Writer, name string, data interface{}, c echo.Context) error {
 
-	t.templates = template.Must(template.ParseFiles("webserver/templates/"+name, "webserver/templates/layout.html"))
+	t.templates = template.Must(template.ParseFiles("web/templates/"+name, "web/templates/layout.html"))
 
 	// Add global methods if data is a map
 	if viewContext, isMap := data.(map[string]interface{}); isMap {
