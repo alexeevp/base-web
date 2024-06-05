@@ -5,12 +5,10 @@ import (
 	"context"
 	"errors"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
-	"slices"
 	"time"
 )
 
@@ -20,18 +18,7 @@ func Run() {
 
 	e = echo.New()
 	//e.Use(middleware.Logger())
-	e.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-		Skipper: func(c echo.Context) bool {
-			return slices.Contains([]string{"/login", "/auth", "/favicon.ico"}, c.Path())
-		},
-		KeyLookup: "cookie:sid",
-		Validator: func(key string, c echo.Context) (bool, error) {
-			return key == "valid-key", nil
-		},
-		ErrorHandler: func(err error, c echo.Context) error {
-			return c.Redirect(http.StatusSeeOther, "/login")
-		},
-	}))
+	e.Use(middlewareAuth())
 	e.GET("/", action.Index)
 	e.GET("/favicon.ico", func(c echo.Context) error {
 		return c.String(http.StatusNoContent, "")
