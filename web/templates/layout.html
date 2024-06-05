@@ -21,12 +21,10 @@
                     <li class="nav-item">
                         <a class="nav-link" href="/second">Second</a>
                     </li>
-                    {{ if .logged }}
-                        <li class="nav-item"><a class="nav-link" href="/logout">Logout</a></li>
-                    {{ else }}
-                        <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
-                    {{ end }}
                 </ul>
+                <form style="margin-left: auto;" action="/logout" method="post">
+                    <button class="btn btn-default">Logout</button>
+                </form>
             </div>
         </div>
     </nav>
