@@ -18,7 +18,7 @@ func Run() {
 
 	e = echo.New()
 	//e.Use(middleware.Logger())
-	e.Use(middlewareAuth())
+	middlewareAuth(e)
 	e.GET("/", action.Index)
 	e.GET("/favicon.ico", func(c echo.Context) error {
 		return c.String(http.StatusNoContent, "")
@@ -67,6 +67,7 @@ func (t *TemplateRenderer) Render(w io.Writer, name string, data interface{}, c 
 		return errors.New("Can't render without map data.")
 	}
 	viewContext["reverse"] = c.Echo().Reverse
+	viewContext["user"] = "u" //c.Get("user").(*jwt.Token).Claims.(*jwtCustomClaims)
 
 	t.templates = template.Must(template.ParseFiles("web/templates/"+name, "web/templates/layout.html"))
 	return t.templates.ExecuteTemplate(w, "layout.html", data)
