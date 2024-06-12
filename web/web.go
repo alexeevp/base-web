@@ -4,47 +4,72 @@ import (
 	"bms/web/action"
 	"context"
 	"errors"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
+	"slices"
 	"time"
 )
 
-var e *echo.Echo
+type Webserver struct {
+	*echo.Echo
+	jwtSignKey string
+}
 
-func Run() {
+func NewWebserver(jwtSignKey string) *Webserver {
+	w := &Webserver{
+		echo.New(),
+		jwtSignKey,
+	}
+	w.DefaultConfig()
+	return w
+}
 
-	e = echo.New()
-	//e.Use(middleware.Logger())
-	middlewareAuth(e)
-	e.GET("/", action.Index)
-	e.GET("/favicon.ico", func(c echo.Context) error {
+func (w *Webserver) DefaultConfig() {
+	w.Use(echojwt.WithConfig(echojwt.Config{
+		Skipper: func(c echo.Context) bool {
+			return slices.Contains([]string{"/login", "/auth", "/favicon.ico"}, c.Path())
+		},
+		SigningKey:  []byte(w.jwtSignKey),
+		TokenLookup: "cookie:sid",
+		ErrorHandler: func(c echo.Context, err error) error {
+			return c.Redirect(http.StatusSeeOther, "/login")
+		},
+	}))
+	//w.Use(middleware.Logger())
+
+	w.GET("/", action.Index)
+	w.Static("/static", "web/static")
+	w.GET("/favicon.ico", func(c echo.Context) error {
 		return c.String(http.StatusNoContent, "")
 	})
-	e.GET("/login", action.Login)
-	e.POST("/auth", action.Auth)
-	e.POST("/logout", action.Logout)
-	e.GET("/second", action.Second)
-	e.Static("/static", "web/static")
-	e.HideBanner = true
-	e.Renderer = &TemplateRenderer{}
+	w.GET("/login", Login)
+	w.POST("/auth", Auth)
+	w.POST("/logout", Logout)
+	w.GET("/second", action.Second)
 
+	w.HideBanner = true
+	w.Renderer = &TemplateRenderer{}
+}
+
+func (w *Webserver) Run() {
 	go func() {
-		err := e.Start(":1323")
+		err := w.Start(":1323")
 		if err != nil && !errors.Is(err, http.ErrServerClosed) {
-			e.Logger.Fatal(err)
+			w.Logger.Fatal(err)
 		}
 	}()
 }
 
-func Shutdown() {
+func (w *Webserver) Off() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
-	err := e.Shutdown(ctx)
+	err := w.Shutdown(ctx)
 	if err != nil {
-		e.Logger.Fatal(err)
+		w.Logger.Fatal(err)
 	}
 	log.Println("Webserver shutdown complete")
 }

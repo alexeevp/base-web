@@ -15,10 +15,12 @@ func main() {
 		log.Panic(err)
 	}
 
-	web.Run()
+	w := web.NewWebserver(os.Getenv("JWT_SIGNKEY"))
+
+	w.Run()
 
 	s := make(chan os.Signal, 1)
 	signal.Notify(s, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	<-s
-	web.Shutdown()
+	w.Off()
 }
